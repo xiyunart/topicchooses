@@ -15,6 +15,7 @@ const KEY="topicchooses_revised_v4";let S=JSON.parse(localStorage.getItem(KEY)||
 function esc(x){return String(x||"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}function catClass(c){if(c==="雑談")return"red";if(c==="ゲーム")return"blue";if(c==="エンタメ")return"green";if(c==="絵・創作")return"yellow";if(c==="リクエスト")return"mint";return"yellow"}
 async function joinRoom(){const code=(document.getElementById("roomInput").value||"").trim().toUpperCase();if(!code)return;roomCode=code;history.replaceState({},"",location.pathname+"?room="+encodeURIComponent(roomCode));await connectRoom()}
 async function connectRoom(){if(!roomCode){document.getElementById("roomStatus").textContent="ルームコードを入力してください";return}document.getElementById("roomInput").value=roomCode;roomChannel=supabaseClient.channel("topicchooses-room-"+roomCode);roomChannel.on("broadcast",{event:"state"},({payload})=>{
+
   roomFound = true;
 
   if(payload?.state){
