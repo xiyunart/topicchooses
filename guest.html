@@ -15,7 +15,6 @@ const KEY="topicchooses_revised_v4";let S=JSON.parse(localStorage.getItem(KEY)||
 function esc(x){return String(x||"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}function catClass(c){if(c==="雑談")return"red";if(c==="ゲーム")return"blue";if(c==="エンタメ")return"green";if(c==="絵・創作")return"yellow";if(c==="リクエスト")return"mint";return"yellow"}
 async function joinRoom(){const code=(document.getElementById("roomInput").value||"").trim().toUpperCase();if(!code)return;roomCode=code;history.replaceState({},"",location.pathname+"?room="+encodeURIComponent(roomCode));await connectRoom()}
 async function connectRoom(){if(!roomCode){document.getElementById("roomStatus").textContent="ルームコードを入力してください";return}document.getElementById("roomInput").value=roomCode;roomChannel=supabaseClient.channel("topicchooses-room-"+roomCode);roomChannel.on("broadcast",{event:"state"},({payload})=>{
-
   roomFound = true;
 
   if(payload?.state){
@@ -33,34 +32,96 @@ roomChannel.on("broadcast",{event:"room_closed"},()=>{
     `;
 });
 let roomFound = false;
+let roomCheckTimer = null;
 
-roomChannel.subscribe(async status => {
-  if(status === "SUBSCRIBED"){
-    document.getElementById("roomStatus").textContent = "ルームを確認中…";
-
-    await roomChannel.send({
-      type: "broadcast",
-      event: "hello",
-      payload: {}
-    });
-
-    setTimeout(() => {
-      if(!roomFound){
-        document.body.innerHTML = `
-          <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">
-            <div>
-              <h2>ルームがありません</h2>
-              <p>このルームは存在しないか、すでに終了しています。</p>
-            </div>
-          </div>
-        `;
-      }
-    }, 3000);
-
-  }else{
-    document.getElementById("roomStatus").textContent = "接続待機中";
+async function connectRoom(){
+  if(!roomCode){
+    document.getElementById("roomStatus").textContent="ルームコードを入力してください";
+    return;
   }
-});
+
+  // 前のルームの接続が残っていたら解除
+  if(roomChannel){
+    await roomChannel.unsubscribe();
+    roomChannel=null;
+  }
+
+  roomFound=false;
+  clearTimeout(roomCheckTimer);
+
+  document.getElementById("roomInput").value=roomCode;
+  document.getElementById("roomStatus").textContent="ルームを確認中…";
+
+  roomChannel=supabaseClient.channel("topicchooses-room-"+roomCode);
+
+  // ホストから状態が返ってきた
+  roomChannel.on("broadcast",{event:"state"},({payload})=>{
+    if(!payload?.state) return;
+
+    // 終了済みルーム
+    if(payload.state.roomClosed){
+      clearTimeout(roomCheckTimer);
+      document.body.innerHTML=`
+        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">
+          <div>
+            <h2>ルームが終了しました</h2>
+            <p>ホストによってこのルームは終了されました。</p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // 正常なルーム
+    roomFound=true;
+    clearTimeout(roomCheckTimer);
+
+    apply(payload.state);
+    document.getElementById("roomStatus").textContent="リアルタイム接続中";
+  });
+
+  // ホストが今いるルームを閉じた瞬間
+  roomChannel.on("broadcast",{event:"room_closed"},()=>{
+    clearTimeout(roomCheckTimer);
+
+    document.body.innerHTML=`
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">
+        <div>
+          <h2>ルームが終了しました</h2>
+          <p>ホストによってこのルームは終了されました。</p>
+        </div>
+      </div>
+    `;
+  });
+
+  roomChannel.subscribe(async status=>{
+    if(status==="SUBSCRIBED"){
+
+      // 3秒以内にホストから返事がなければ存在しない扱い
+      roomCheckTimer=setTimeout(()=>{
+        if(!roomFound){
+          document.body.innerHTML=`
+            <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">
+              <div>
+                <h2>ルームがありません</h2>
+                <p>このルームは存在しないか、すでに終了しています。</p>
+              </div>
+            </div>
+          `;
+        }
+      },3000);
+
+      await roomChannel.send({
+        type:"broadcast",
+        event:"hello",
+        payload:{}
+      });
+
+    }else{
+      document.getElementById("roomStatus").textContent="接続待機中";
+    }
+  });
+}
 function render(){const host=S.host||{name:"ホスト",img:""};const guests=Array.isArray(S.guests)?S.guests.slice(0,3):[];let people=`<div class="person"><img src="${host.img||ph}"><b>${esc(host.name||"ホスト")}</b><small>♛ ホスト</small></div>`;guests.forEach((g,i)=>{people+=`<div class="person"><img src="${g.img||ph}"><b>${esc(g.name||("ゲスト"+(i+1)))}</b><small>● ゲスト</small></div>`});document.getElementById("people").innerHTML=people;
 document.getElementById("now").textContent=S.now?.text||"お題を待っています";document.getElementById("nowCat").innerHTML=S.now?`<span class="catPill ${catClass(S.now.cat)}">${esc(S.now.cat)}</span>`:"";
 document.getElementById("next").textContent=S.publishedNext?.text||"次のお題を待っています";document.getElementById("nextCat").innerHTML=S.publishedNext?`<span class="catPill ${catClass(S.publishedNext.cat)}">${esc(S.publishedNext.cat)}</span>`:"";
