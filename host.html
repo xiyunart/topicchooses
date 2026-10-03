@@ -331,6 +331,28 @@ async function closeRoom(){
   render();
 }
 async function copyRoomLink(){const url=new URL("guest.html",location.href);url.searchParams.set("room",roomCode);const text=url.href;try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text)}else{const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove()}document.getElementById("roomStatus").textContent="参加リンクをコピーしました ✓"}catch(e){document.getElementById("roomStatus").textContent="リンクをコピーできませんでした";prompt("このリンクをゲストに送ってね",text)}}
+async function closeRoom(){
+  if(!confirm("このルームを閉じますか？")){
+    return;
+  }
+
+  if(roomChannel){
+    await roomChannel.send({
+      type:"broadcast",
+      event:"room_closed",
+      payload:{}
+    });
+  }
+
+  document.body.innerHTML=`
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">
+      <div>
+        <h2>ルームを終了しました</h2>
+        <p>このルームは終了されています。</p>
+      </div>
+    </div>
+  `;
+}
 async function initRealtime(){document.getElementById("roomCode").textContent=roomCode;roomChannel=supabaseClient.channel("topicchooses-room-"+roomCode);roomChannel.on("broadcast",{event:"request"},({payload})=>{const r=payload?.request;if(!r)return;S.requests=S.requests||[];S.requests.unshift(r);save()});roomChannel.on("broadcast",{event:"hello"},()=>{roomChannel.send({type:"broadcast",event:"state",payload:{state:S}})});roomChannel.subscribe(status=>{if(status==="SUBSCRIBED")document.getElementById("roomStatus").textContent="リアルタイム接続中";else document.getElementById("roomStatus").textContent="接続待機中"})}
 function render(){
 let p=`<div class="person fixed"><img class="avatar" id="hostImg" src="${S.host.img||ph}"><b>ホスト</b><div class="fields"><input value="${esc(S.host.name)}" oninput="hostName(this.value)" placeholder="ホスト名"><input id="hostFile" type="file" accept="image/*"></div></div>`;
