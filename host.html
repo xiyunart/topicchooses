@@ -303,9 +303,11 @@ function startNext(){
   save();
 }
 function reroll(){
+  alert("引き直しボタンは動いてる！");
   S.next=pick();
   S.publishedNext=null;
   save();
+}
 }
 function publishNext(){if(!S.next){alert("NEXTのお題がありません");return}S.publishedNext={...S.next};save()}
 function addGuest(){if(S.guests.length>=3)return alert("ゲストは最大3人までです");S.guests.push({name:"ゲスト"+(S.guests.length+1),img:""});save()}function removeGuest(i){S.guests.splice(i,1);save()}function fileData(input,cb){let f=input.files[0];if(!f)return;let r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(f)}function hostName(v){S.host.name=v;localStorage.setItem(KEY,JSON.stringify(S));if(bc)bc.postMessage(S)}function guestName(i,v){S.guests[i].name=v;localStorage.setItem(KEY,JSON.stringify(S));if(bc)bc.postMessage(S)}
