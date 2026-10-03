@@ -1,0 +1,16 @@
+{
+  "name": "Topic Chooses",
+  "short_name": "Topic Chooses",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#031137",
+  "theme_color": "#061744",
+  "icons": [
+    {
+      "src": "topic_choose_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
