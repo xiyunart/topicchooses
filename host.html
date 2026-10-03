@@ -18,12 +18,277 @@
 <footer class="footer">@Xiyun_art　Version 1.1.1</footer></div></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const SUPABASE_URL="https://kaottlvxohgpajjvdfpx.supabase.co",SUPABASE_KEY="sb_publishable_MTD7TCWqWaHSPFHJpZVvXQ_Ro1vEoUb";const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);let roomCode=new URLSearchParams(location.search).get("room")||Math.random().toString(36).slice(2,8).toUpperCase();let roomChannel=null;
-const TOPICS={"雑談":["最近あったうれしいことは？","最近買ってよかったものは？","最近ちょっと笑ったことは？","休日は何して過ごす？"],"ゲーム":["最近ハマってるゲームは？","思い出に残っているゲームは？","好きなゲームジャンルは？","最近やってみたいゲームは？"],"エンタメ":["最近見た作品でよかったものは？","最近よく見るYouTuber・VTuberは？","最近気になっている作品は？","好きな音楽やアーティストは？"],"絵・創作":["最近描いていて楽しかった絵は？","絵で一番こだわっているところは？","使ってみたい画材・ツールは？","好きな絵柄や作風は？"]};
-const KEY="topicchooses_revised_v4";let S=JSON.parse(localStorage.getItem(KEY)||"null")||{host:{name:"ホスト",img:""},guests:[],weights:{"雑談":25,"ゲーム":25,"エンタメ":25,"絵・創作":25},now:null,next:null,logs:[],requests:[],seconds:600,running:false,publishedNext:null};S.host=S.host||{name:"ホスト",img:""};S.guests=Array.isArray(S.guests)?S.guests.slice(0,3):[];if(!S._logoFix1011){if(S.host.name==="ましちゃん")S.host.name="ホスト";S.host.img="";S._logoFix1011=true;localStorage.setItem(KEY,JSON.stringify(S));}S.weights=S.weights||{"雑談":25,"ゲーム":25,"エンタメ":25,"絵・創作":25};
+const TOPICS={
+"雑談":[
+"最近あったうれしいことは？",
+"最近買ってよかったものは？",
+"最近ちょっと笑ったことは？",
+"休日は何して過ごす？",
+"最近ハマっていることは？",
+"最近気になっていることは？",
+"最近食べておいしかったものは？",
+"最近行ってみたい場所は？",
+"最近よく聴いている曲は？",
+"最近よく見ている動画は？",
+"朝起きて最初にすることは？",
+"寝る前にいつもすることは？",
+"好きな季節は？",
+"好きな時間帯は？",
+"好きな天気は？",
+"好きな飲み物は？",
+"好きなお菓子は？",
+"好きな食べ物は？",
+"苦手な食べ物は？",
+"最近挑戦してみたいことは？",
+"もし一日だけ自由な日があったら何する？",
+"もし一週間休みがあったら何したい？",
+"今一番ほしいものは？",
+"最近買おうか迷っているものは？",
+"最近お気に入りの場所は？",
+"落ち着く場所はどこ？",
+"好きな匂いは？",
+"好きな色は？",
+"好きな動物は？",
+"好きな飲み物を一つ選ぶなら？",
+"旅行するならどこに行きたい？",
+"住んでみたい場所は？",
+"最近印象に残った出来事は？",
+"最近誰かに感謝したことは？",
+"最近誰かに褒められたことは？",
+"最近自分を褒めたいことは？",
+"最近頑張ったことは？",
+"最近ちょっと困ったことは？",
+"最近びっくりしたことは？",
+"最近懐かしいと思ったことは？",
+"子どもの頃に好きだったものは？",
+"昔よくやっていた遊びは？",
+"子どもの頃の夢は？",
+"今と昔で変わったことは？",
+"一度やってみたいことは？",
+"もし透明人間になったら何する？",
+"もし空を飛べたらどこへ行く？",
+"もし宝くじが当たったら何に使う？",
+"一日だけ別の職業になるなら何をしてみたい？",
+"今みんなにおすすめしたいものは？"
+],
+
+"ゲーム":[
+"最近ハマってるゲームは？",
+"思い出に残っているゲームは？",
+"好きなゲームジャンルは？",
+"最近やってみたいゲームは？",
+"一番長く遊んだゲームは？",
+"初めて遊んだゲームは？",
+"一番好きなゲームキャラクターは？",
+"好きなゲームのBGMは？",
+"ゲームで一番楽しい瞬間は？",
+"ゲームで一番苦手なことは？",
+"ゲームをするときに重視することは？",
+"一人で遊ぶのとみんなで遊ぶのどっちが好き？",
+"協力ゲームと対戦ゲームどっちが好き？",
+"ゲームで使いがちなキャラクターは？",
+"ゲームで使いがちな武器や装備は？",
+"ゲームで好きなマップは？",
+"ゲームで苦手なマップは？",
+"ゲームで一番印象に残っている試合は？",
+"ゲームで起きた面白いハプニングは？",
+"ゲームで一番悔しかった瞬間は？",
+"ゲームで一番うれしかった瞬間は？",
+"ゲームで達成したい目標は？",
+"ゲームをするときのこだわりは？",
+"ゲームを始める前にすることは？",
+"ゲーム中によく言ってしまう言葉は？",
+"ゲーム中についやってしまう癖は？",
+"ゲームで得意になりたいことは？",
+"ゲームで一度は極めてみたいものは？",
+"好きなゲーム会社やシリーズは？",
+"好きなゲームの世界観は？",
+"好きなゲームのストーリーは？",
+"好きなゲームのデザインは？",
+"好きなゲームのUIは？",
+"ゲームで好きな演出は？",
+"ゲームで好きな音は？",
+"ゲームのキャラクターを選ぶとき何を重視する？",
+"ゲームを買うとき何を基準にする？",
+"新作ゲームと昔のゲームどっちを遊びたい？",
+"ゲーム実況を見るのと自分で遊ぶのどっちが好き？",
+"ゲーム配信をするならどんなゲーム？",
+"ゲームの思い出を一つ語るなら？",
+"ゲームで仲良くなった人との思い出は？",
+"ゲームで初めて達成感を感じた瞬間は？",
+"ゲームで一番苦労したボスは？",
+"ゲームで一番好きなステージは？",
+"ゲームで一番好きなアイテムは？",
+"ゲームの世界に行けるならどの作品？",
+"ゲームキャラクターになれるなら誰？",
+"一日中ゲームできるなら何を遊ぶ？",
+"今後遊んでみたいゲームは？"
+],
+
+"エンタメ":[
+"最近見た作品でよかったものは？",
+"最近よく見るYouTuber・VTuberは？",
+"最近気になっている作品は？",
+"好きな音楽やアーティストは？",
+"一番好きな映画は？",
+"一番好きなアニメは？",
+"一番好きな漫画は？",
+"一番好きなドラマは？",
+"最近見て面白かった動画は？",
+"最近聴いてよかった曲は？",
+"好きなアニメのキャラクターは？",
+"好きな映画のキャラクターは？",
+"好きな漫画のキャラクターは？",
+"好きな声優は？",
+"好きな歌手やアーティストは？",
+"好きなVTuberは？",
+"好きなYouTuberは？",
+"好きな配信者は？",
+"好きな作品の主題歌は？",
+"好きな作品のエンディング曲は？",
+"好きな作品の名シーンは？",
+"印象に残っている作品のセリフは？",
+"泣いた作品は？",
+"笑った作品は？",
+"何度も見返している作品は？",
+"最近おすすめしたい作品は？",
+"昔好きだった作品は？",
+"子どもの頃に見ていた作品は？",
+"好きな作品のジャンルは？",
+"苦手な作品のジャンルは？",
+"映画館で映画を見るのは好き？",
+"映画を見るなら家と映画館どっち？",
+"アニメは一気見する派？少しずつ見る派？",
+"漫画は紙と電子どっちが好き？",
+"音楽を聴くとき歌詞とメロディどっちを重視する？",
+"作品を見るときストーリーとキャラクターどっちを重視する？",
+"好きな作品の世界観は？",
+"好きな作品の衣装は？",
+"好きな作品の演出は？",
+"好きな作品の映像表現は？",
+"好きな作品の音楽は？",
+"実写化してほしい作品は？",
+"アニメ化してほしい作品は？",
+"続編を期待している作品は？",
+"もう一度最初から見たい作品は？",
+"友達におすすめするならどの作品？",
+"一日だけ作品の世界に入れるならどの作品？",
+"作品の主人公になれるならどんな作品？",
+"好きなエンタメを一つだけ選ぶなら？",
+"最近エンタメで一番楽しみにしていることは？"
+],
+
+"絵・創作":[
+"最近描いていて楽しかった絵は？",
+"絵で一番こだわっているところは？",
+"使ってみたい画材・ツールは？",
+"好きな絵柄や作風は？",
+"一番描くのが好きなモチーフは？",
+"描くのが苦手なモチーフは？",
+"好きな色の組み合わせは？",
+"最近練習していることは？",
+"これから練習したいことは？",
+"絵を描くとき最初に決めるものは？",
+"ラフと線画どっちが好き？",
+"塗りと線画どっちが好き？",
+"厚塗りとアニメ塗りどっちが好き？",
+"好きなブラシは？",
+"よく使う色は？",
+"よく使うポーズは？",
+"描くのが好きな表情は？",
+"描くのが好きな髪型は？",
+"描くのが好きな服装は？",
+"描くのが好きな背景は？",
+"背景を描くのは好き？",
+"人物と背景どっちが好き？",
+"カラーとモノクロどっちが好き？",
+"全身絵とバストアップどっちが好き？",
+"一枚絵と漫画どっちを描きたい？",
+"絵を描き始めたきっかけは？",
+"絵を描いていて一番楽しい瞬間は？",
+"絵を描いていて一番難しいことは？",
+"完成した絵で一番見るところは？",
+"自分の絵の好きなところは？",
+"自分の絵で改善したいところは？",
+"絵を描くとき音楽を聴く？",
+"絵を描く場所はどこが好き？",
+"絵を描く時間帯はいつが好き？",
+"一日だけ別の絵師になれるなら何を学びたい？",
+"好きなイラストレーターは？",
+"影響を受けた絵師は？",
+"参考にする作品は？",
+"好きなイラストの構図は？",
+"好きなカメラアングルは？",
+"好きな光の表現は？",
+"好きな質感表現は？",
+"描いてみたいシチュエーションは？",
+"描いてみたい衣装は？",
+"描いてみたいキャラクターは？",
+"描いてみたい世界観は？",
+"いつか挑戦したい絵のテーマは？",
+"絵を描く上で大切にしていることは？",
+"創作するときに一番楽しい工程は？",
+"今後どんな絵を描けるようになりたい？"
+]
+};
+const KEY="topicchooses_revised_v4";let S=JSON.parse(localStorage.getItem(KEY)||"null")||{host:{name:"ホスト",img:""},guests:[],weights:{"雑談":25,"ゲーム":25,"エンタメ":25,"絵・創作":25},now:null,next:null,logs:[],requests:[],seconds:600,running:false,publishedNext:null,recentTopics:[]};
+S.recentTopics=Array.isArray(S.recentTopics)?S.recentTopics:[];  
+S.host=S.host||{name:"ホスト",img:""};S.guests=Array.isArray(S.guests)?S.guests.slice(0,3):[];if(!S._logoFix1011){if(S.host.name==="ましちゃん")S.host.name="ホスト";S.host.img="";S._logoFix1011=true;localStorage.setItem(KEY,JSON.stringify(S));}S.weights=S.weights||{"雑談":25,"ゲーム":25,"エンタメ":25,"絵・創作":25};
 const bc=("BroadcastChannel"in window)?new BroadcastChannel(KEY):null;const ph='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" rx="50" fill="#183d85"/><circle cx="50" cy="50" r="28" fill="#72d9ff"/></svg>');
 function esc(x){return String(x||"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}async function save(){localStorage.setItem(KEY,JSON.stringify(S));if(bc)bc.postMessage(S);render();if(roomChannel){await roomChannel.send({type:"broadcast",event:"state",payload:{state:S}})}}
-function pick(){let pool=[];Object.entries(S.weights).forEach(([c,w])=>{for(let i=0;i<Math.max(0,Math.round(w));i++)pool.push(c)});let c=pool[Math.floor(Math.random()*pool.length)]||"雑談";let a=TOPICS[c].filter(x=>x!==S.now?.text&&x!==S.next?.text);return{cat:c,text:(a.length?a:TOPICS[c])[Math.floor(Math.random()*(a.length?a:TOPICS[c]).length)]}}
-function startNext(){if(!S.next)S.next=pick();S.now=S.next;S.logs.unshift({time:new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"}),cat:S.now.cat,text:S.now.text});S.next=pick();S.publishedNext=null;save()}function reroll(){S.next=pick();S.publishedNext=null;save()}function publishNext(){if(!S.next){alert("NEXTのお題がありません");return}S.publishedNext={...S.next};save()}
+function pick(){
+  let pool=[];
+  Object.entries(S.weights).forEach(([c,w])=>{
+    for(let i=0;i<Math.max(0,Math.round(w));i++)pool.push(c);
+  });
+
+  let c=pool[Math.floor(Math.random()*pool.length)]||"雑談";
+
+  let a=TOPICS[c].filter(x=>
+    !S.recentTopics.includes(x)&&
+    x!==S.now?.text&&
+    x!==S.next?.text
+  );
+
+  if(!a.length){
+    a=TOPICS[c].filter(x=>
+      x!==S.now?.text&&
+      x!==S.next?.text
+    );
+  }
+
+  if(!a.length){
+    a=TOPICS[c];
+  }
+
+  return{
+    cat:c,
+    text:a[Math.floor(Math.random()*a.length)]
+  };
+}
+function startNext(){
+  if(!S.next)S.next=pick();
+
+  S.now=S.next;
+
+  S.recentTopics=S.recentTopics||[];
+  S.recentTopics.push(S.now.text);
+
+  if(S.recentTopics.length>10){
+    S.recentTopics=S.recentTopics.slice(-10);
+  }
+
+  S.logs.unshift({
+    time:new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"}),
+    cat:S.now.cat,
+    text:S.now.text
+  });
+
+  S.next=pick();
+  S.publishedNext=null;
+  save();
+}
+function publishNext(){if(!S.next){alert("NEXTのお題がありません");return}S.publishedNext={...S.next};save()}
 function addGuest(){if(S.guests.length>=3)return alert("ゲストは最大3人までです");S.guests.push({name:"ゲスト"+(S.guests.length+1),img:""});save()}function removeGuest(i){S.guests.splice(i,1);save()}function fileData(input,cb){let f=input.files[0];if(!f)return;let r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(f)}function hostName(v){S.host.name=v;localStorage.setItem(KEY,JSON.stringify(S));if(bc)bc.postMessage(S)}function guestName(i,v){S.guests[i].name=v;localStorage.setItem(KEY,JSON.stringify(S));if(bc)bc.postMessage(S)}
 function setWeight(c,v){S.weights[c]=+v;let others=Object.keys(S.weights).filter(x=>x!==c),sum=others.reduce((a,k)=>a+S.weights[k],0),target=100-S.weights[c],left=target;others.forEach((k,i)=>{S.weights[k]=i===others.length-1?Math.max(0,left):Math.max(0,Math.round(target*(S.weights[k]/Math.max(sum,1))));left-=S.weights[k]});save()}
 function fmt(s){return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}function toggleTimer(){S.running=!S.running;save()}function setTimer(m){S.seconds=m*60;S.running=false;save()}setInterval(()=>{if(S.running&&S.seconds>0){S.seconds--;render()}else if(S.running){S.running=false;save()}},1000)
