@@ -303,10 +303,16 @@ function startNext(){
   save();
 }
 window.reroll=function(){
-  alert("引き直しボタンは動いてる！");
+  alert("①ボタンOK");
+
   S.next=pick();
+
+  alert("②pick OK");
+
   S.publishedNext=null;
   save();
+
+  alert("③save OK");
 };
   
 function publishNext(){
