@@ -232,6 +232,20 @@ const TOPICS={
 ]
 };
 const KEY="topicchooses_revised_v4";let S=JSON.parse(localStorage.getItem(KEY)||"null")||{host:{name:"ホスト",img:""},guests:[],weights:{"雑談":25,"ゲーム":25,"エンタメ":25,"絵・創作":25},now:null,next:null,logs:[],requests:[],seconds:600,running:false,publishedNext:null,recentTopics:[]};
+const LAST_ROOM_KEY="topicchooses_last_room";
+
+const lastRoom=localStorage.getItem(LAST_ROOM_KEY);
+
+if(lastRoom && lastRoom!==roomCode){
+  S.logs=[];
+  S.recentTopics=[];
+  S.now=null;
+  S.next=null;
+  S.publishedNext=null;
+  S.requests=[];
+}
+
+localStorage.setItem(LAST_ROOM_KEY,roomCode);
 S.recentTopics=Array.isArray(S.recentTopics)?S.recentTopics:[];  
 S.host=S.host||{name:"ホスト",img:""};S.guests=Array.isArray(S.guests)?S.guests.slice(0,3):[];if(!S._logoFix1011){if(S.host.name==="ましちゃん")S.host.name="ホスト";S.host.img="";S._logoFix1011=true;localStorage.setItem(KEY,JSON.stringify(S));}S.weights=S.weights||{"雑談":25,"ゲーム":25,"エンタメ":25,"絵・創作":25};
 const bc=("BroadcastChannel"in window)?new BroadcastChannel(KEY):null;const ph='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" rx="50" fill="#183d85"/><circle cx="50" cy="50" r="28" fill="#72d9ff"/></svg>');
