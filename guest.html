@@ -14,23 +14,7 @@ const SUPABASE_URL="https://kaottlvxohgpajjvdfpx.supabase.co",SUPABASE_KEY="sb_p
 const KEY="topicchooses_revised_v4";let S=JSON.parse(localStorage.getItem(KEY)||"{}" );S.host=S.host||{name:"ホスト",img:""};S.guests=Array.isArray(S.guests)?S.guests.slice(0,3):[];if(!S._logoFix1011){if(S.host.name==="ましちゃん")S.host.name="ホスト";S.host.img="";S._logoFix1011=true;localStorage.setItem(KEY,JSON.stringify(S));}S.publishedNext=S.publishedNext||null;const bc=("BroadcastChannel"in window)?new BroadcastChannel(KEY):null;const ph='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" rx="50" fill="#183d85"/><circle cx="50" cy="50" r="28" fill="#72d9ff"/></svg>');
 function esc(x){return String(x||"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}function catClass(c){if(c==="雑談")return"red";if(c==="ゲーム")return"blue";if(c==="エンタメ")return"green";if(c==="絵・創作")return"yellow";if(c==="リクエスト")return"mint";return"yellow"}
 async function joinRoom(){const code=(document.getElementById("roomInput").value||"").trim().toUpperCase();if(!code)return;roomCode=code;history.replaceState({},"",location.pathname+"?room="+encodeURIComponent(roomCode));await connectRoom()}
-async function connectRoom(){if(!roomCode){document.getElementById("roomStatus").textContent="ルームコードを入力してください";return}document.getElementById("roomInput").value=roomCode;roomChannel=supabaseClient.channel("topicchooses-room-"+roomCode);roomChannel.on("broadcast",{event:"state"},({payload})=>{
-  roomFound = true;
 
-  if(payload?.state){
-    apply(payload.state);
-  }
-});
-roomChannel.on("broadcast",{event:"room_closed"},()=>{
-    document.body.innerHTML=`
-        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">
-            <div>
-                <h2>ルームが終了しました</h2>
-                <p>ホストによってこのルームは終了されました。</p>
-            </div>
-        </div>
-    `;
-});
 let roomFound = false;
 let roomCheckTimer = null;
 
