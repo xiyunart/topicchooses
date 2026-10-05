@@ -455,7 +455,34 @@ async function hostLogout(){await supabaseClient.auth.signOut();hostUser=null;ho
 async function updateHostAuthUI(){const login=document.getElementById("hostXLogin"),logout=document.getElementById("hostXLogout"),send=document.getElementById("hostCommentSend"),status=document.getElementById("hostChatLogin");if(!login||!logout||!send||!status)return;if(hostUser){const ok=await hostRegister();login.style.display=ok?"none":"block";logout.style.display=ok?"block":"none";send.disabled=!ok;status.textContent=ok?"ホストとしてログイン中。コメント・固定・削除ができます。":"このルームのホストとして登録できません。"}else{login.style.display="block";logout.style.display="none";send.disabled=true;status.textContent="ホストとしてコメントするにはXでログインしてください。"}}
 async function loadHostComments(){const code=hostRoomCode();if(!code)return;const {data,error}=await supabaseClient.from(COMMENT_TABLE).select("id,room_code,user_id,display_name,avatar_url,message,created_at,is_pinned,is_deleted,updated_at").eq("room_code",code).order("created_at",{ascending:true}).limit(300);if(error){console.error("host comment load error",error);return}hostComments=Array.isArray(data)?data:[];renderHostComments();if(hostCommentChannel)supabaseClient.removeChannel(hostCommentChannel);hostCommentChannel=supabaseClient.channel("host-comments-"+code).on("postgres_changes",{event:"INSERT",schema:"public",table:COMMENT_TABLE,filter:"room_code=eq."+code},p=>{if(p.new&&!hostComments.some(x=>x.id===p.new.id)){hostComments.push(p.new);renderHostComments()}}).on("postgres_changes",{event:"UPDATE",schema:"public",table:COMMENT_TABLE,filter:"room_code=eq."+code},p=>{const i=hostComments.findIndex(x=>x.id===p.new.id);if(i>=0)hostComments[i]=p.new;else hostComments.push(p.new);renderHostComments()}).on("postgres_changes",{event:"DELETE",schema:"public",table:COMMENT_TABLE,filter:"room_code=eq."+code},p=>{hostComments=hostComments.filter(x=>x.id!==p.old.id);renderHostComments()}).subscribe()}
 function renderHostComments(){const list=document.getElementById("hostCommentList"),topic=document.getElementById("hostChatTopic");if(topic)topic.textContent=S.now?.text||"お題を待っています";if(!list)return;const rows=[...hostComments].sort((a,b)=>(Number(b.is_pinned)-Number(a.is_pinned))||new Date(a.created_at)-new Date(b.created_at));if(!rows.length){list.innerHTML='<li class="host-chat-empty">コメントはまだありません。</li>';return}list.innerHTML=rows.map(c=>{const deleted=!!c.is_deleted;return `<li class="host-comment-item ${c.is_pinned?'pinned':''}"><img class="host-comment-avatar" src="${esc(c.avatar_url||ph)}" alt=""><div class="host-comment-main"><div class="host-comment-meta"><span class="host-comment-name">${esc(c.display_name||"Xユーザー")}</span><span class="host-comment-time">${formatHostTime(c.created_at)}</span>${c.is_pinned?'<span>📌</span>':''}</div><div class="host-comment-text">${deleted?'（削除済み）':esc(c.message||"").replace(/\n/g,"<br>")}</div>${!deleted?`<div class="host-comment-actions"><button class="${c.is_pinned?'pinned':''}" onclick="togglePinComment('${c.id}',${!c.is_pinned})">${c.is_pinned?'📌 固定解除':'📌 固定'}</button><button class="danger" onclick="deleteComment('${c.id}')">🗑 削除</button></div>`:''}</div></li>`}).join("")}
-async function togglePinComment(id,pinned){if(!hostRegistered){alert("ホストログインが必要です");return}const {error}=await supabaseClient.from(COMMENT_TABLE).update({is_pinned:pinned,updated_at:new Date().toISOString()}).eq("id",id);if(error){console.error(error);alert("固定状態を変更できませんでした。")}}
+async function togglePinComment(id,pinned){
+  if(!hostRegistered){
+    alert("ホストログインが必要です");
+    return;
+  }
+
+  const {error}=await supabaseClient
+    .from(COMMENT_TABLE)
+    .update({
+      is_pinned:pinned,
+      updated_at:new Date().toISOString()
+    })
+    .eq("id",id);
+
+  if(error){
+    console.error("PIN UPDATE ERROR:",error);
+    alert(
+      "固定状態を変更できませんでした。\n\n"+
+      "code: "+(error.code||"")+"\n"+
+      "message: "+(error.message||"")+"\n"+
+      "details: "+(error.details||"")+"\n"+
+      "hint: "+(error.hint||"")
+    );
+    return;
+  }
+
+  await loadHostComments();
+}
 async function deleteComment(id){if(!hostRegistered){alert("ホストログインが必要です");return}if(!confirm("このコメントを削除しますか？"))return;const {error}=await supabaseClient.from(COMMENT_TABLE).delete().eq("id",id);if(error){console.error(error);alert("コメントを削除できませんでした。")}}
 async function postHostComment(){if(!hostRegistered){alert("先にホストログインしてね");return}const input=document.getElementById("hostCommentInput"),message=input.value.trim();if(!message)return;const btn=document.getElementById("hostCommentSend");btn.disabled=true;const meta=hostUser.user_metadata||{},avatarUrl=meta.avatar_url||meta.picture||null;const {error}=await supabaseClient.from(COMMENT_TABLE).insert({room_code:hostRoomCode(),user_id:hostUser.id,display_name:"ホスト",avatar_url:avatarUrl,message});btn.disabled=false;if(error){console.error(error);alert("コメントを送れませんでした。");return}input.value=""}
 function toggleHostChat(open){document.getElementById("hostChat")?.classList.toggle("open",open);document.getElementById("hostChatOverlay")?.classList.toggle("open",open)}
