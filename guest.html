@@ -295,6 +295,46 @@ async function logoutX(){
   currentUser=null;
   updateAuthUI();
 }
+let commentBlocked=false;
+async function refreshCommentBlockStatus(){
+  commentBlocked=false;
+  const input=document.getElementById("commentInput");
+  const sendBtn=document.getElementById("commentSendBtn");
+  const status=document.getElementById("loginStatus");
+  const sub=document.getElementById("loginSub");
+  const code=currentRoomCode();
+
+  if(!currentUser||!code){
+    if(currentUser) updateAuthUI();
+    return;
+  }
+
+  const {data,error}=await supabaseClient
+    .from("room_comment_blocks")
+    .select("user_id")
+    .eq("room_code",code)
+    .eq("user_id",currentUser.id)
+    .maybeSingle();
+
+  if(error){
+    console.error("comment block check error",error);
+    return;
+  }
+
+  commentBlocked=!!data;
+
+  if(commentBlocked){
+    if(input){
+      input.disabled=true;
+      input.value="";
+      input.placeholder="このルームではコメントできません";
+    }
+    if(sendBtn)sendBtn.disabled=true;
+    if(status)status.textContent="このルームではコメントできません";
+    if(sub)sub.textContent="ホストにブロックされています";
+  }
+}
+
 function updateAuthUI(){
   const loginBtn=document.getElementById("xLoginBtn");
   const logoutBtn=document.getElementById("xLogoutBtn");
@@ -318,8 +358,14 @@ function updateAuthUI(){
     logoutBtn.style.display="block";
     if(headerLoginBtn) headerLoginBtn.style.display="none";
     if(headerLogoutBtn) headerLogoutBtn.style.display="block";
-    input.disabled=false;
-    sendBtn.disabled=false;
+    input.disabled=commentBlocked;
+    sendBtn.disabled=commentBlocked;
+    if(commentBlocked){
+      input.value="";
+      input.placeholder="このルームではコメントできません";
+      status.textContent="このルームではコメントできません";
+      sub.textContent="ホストにブロックされています";
+    }
     if(topicNameInput){
       topicNameInput.value=name;
       topicNameInput.disabled=true;
@@ -349,6 +395,27 @@ async function postComment(){
   const message=input.value.trim();
   if(!message)return;
   if(message.length>300){alert("コメントは300文字以内にしてね");return;}
+
+  const {data:blocked,error:blockedError}=await supabaseClient
+    .from("room_comment_blocks")
+    .select("user_id")
+    .eq("room_code",code)
+    .eq("user_id",currentUser.id)
+    .maybeSingle();
+
+  if(blockedError){
+    console.error("comment block check error",blockedError);
+    alert("ブロック状態を確認できませんでした。");
+    return;
+  }
+
+  if(blocked){
+    commentBlocked=true;
+    updateAuthUI();
+    alert("このルームではコメントできません。");
+    return;
+  }
+
   const meta=currentUser.user_metadata||{};
   const displayName=meta.user_name||meta.preferred_username||meta.name||currentUser.email||"Xユーザー";
   const avatarUrl=meta.avatar_url||meta.picture||null;
@@ -366,8 +433,8 @@ async function postComment(){
   }
 }
 
-supabaseClient.auth.getSession().then(({data})=>{currentUser=data?.session?.user||null;updateAuthUI();}).catch(console.error);
-supabaseClient.auth.onAuthStateChange((_event,session)=>{currentUser=session?.user||null;updateAuthUI();});
+supabaseClient.auth.getSession().then(({data})=>{currentUser=data?.session?.user||null;updateAuthUI();refreshCommentBlockStatus();}).catch(console.error);
+supabaseClient.auth.onAuthStateChange((_event,session)=>{currentUser=session?.user||null;updateAuthUI();refreshCommentBlockStatus();});
 updateAuthUI();
 
 // Open by pulling the handle upward on mobile.
@@ -396,11 +463,11 @@ updateAuthUI();
 const _originalConnectRoom=connectRoom;
 connectRoom=async function(){
   await _originalConnectRoom();
-  if(currentRoomCode()) await loadComments();
+  if(currentRoomCode()){await loadComments();await refreshCommentBlockStatus();}
 };
 const _originalApply=apply;
 apply=function(s){_originalApply(s);updateCommentTopic();};
-if(currentRoomCode()) loadComments();
+if(currentRoomCode()){loadComments();refreshCommentBlockStatus();}
 </script>
 <script>
 const _commentInput=document.getElementById("commentInput");
